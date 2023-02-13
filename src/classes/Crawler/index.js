@@ -6,7 +6,7 @@ class Crawler {
         if (!url) {
             throw new Error('URL is required');
         }
-        
+
         this.url = url;
     }
 
@@ -20,13 +20,21 @@ class Crawler {
         return $(selector);
     }
 
+    async searchMarkup(source, args) {
+        const check = [];
+        args.forEach(arg => {
+            console.log(`Searching for ${arg}...`, source.includes(arg));
+            check.push(source.includes(arg));
+        })
+        return check.every(arg => arg === true);
+    }
+
     async delay(ms) {
         return new Promise(resolve => (
             console.log(`Waiting for ${ms}ms...`),
             setTimeout(resolve, ms)
         ));
     }
-
 }
 
 module.exports = Crawler;
