@@ -8,6 +8,9 @@ class Crawler {
         }
 
         this.url = url;
+        this.delay = 250;
+        this.selector = "body";
+        this.terms = [];
     }
 
     async html() {
@@ -15,25 +18,39 @@ class Crawler {
         return data;
     }
 
-    async select(selector) {
+    async select() {
         const $ = cheerio.load(await this.html());
-        return $(selector);
+        return $(this.selector).html();
     }
 
-    async searchMarkup(source, args) {
-        const check = [];
-        args.forEach(arg => {
-            console.log(`Searching for ${arg}...`, source.includes(arg));
-            check.push(source.includes(arg));
-        })
-        return check.every(arg => arg === true);
-    }
-
-    async delay(ms) {
+    async wait() {
         return new Promise(resolve => (
-            console.log(`Waiting for ${ms}ms...`),
-            setTimeout(resolve, ms)
+            setTimeout(resolve, this.delay)
         ));
+    }
+
+    async search() {
+        const element = await this.select(this.selector);
+        const check = [];
+        
+        this.terms.map(term => {
+            check.push(element.includes(term));
+            console.log(
+                `${new Date().toISOString()} |`,
+                `Searching: ${term} |`,
+                `${element.includes(term) ? "Found!" : "Miss"}`
+            );
+        })
+        return check.every(term => term === true);
+    }
+
+    async run() {
+        let found = false;
+        while (found === false) {
+            await this.wait();
+            found = await this.search();
+        }
+        return found;
     }
 }
 
