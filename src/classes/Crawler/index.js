@@ -2,7 +2,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 class Crawler {
-    constructor(url) {
+    constructor(url, xml = false) {
         if (!url) {
             throw new Error('URL is required');
         }
@@ -11,15 +11,17 @@ class Crawler {
         this.delay = 250;
         this.selector = "body";
         this.terms = [];
+        this.xml = xml;
     }
 
     async html() {
-        const { data } = await axios.get(this.url);
+        const { data, status } = await axios.get(this.url);
+        if (status != 200) console.error(status);
         return data;
     }
 
     async select() {
-        const $ = cheerio.load(await this.html());
+        const $ = cheerio.load(await this.html(), { xmlMode: this.xml });
         return $(this.selector).html();
     }
 
@@ -32,12 +34,13 @@ class Crawler {
     async search() {
         const element = await this.select(this.selector);
         const check = [];
-        
+
         this.terms.map(term => {
+            const date = new Date().toISOString();
             check.push(element.includes(term));
             console.log(
-                `${new Date().toISOString()} |`,
-                `Searching: ${term} |`,
+                `${date} |`,
+                `Searching: "${term}" ->`,
                 `${element.includes(term) ? "Found!" : "Miss"}`
             );
         })
@@ -47,8 +50,8 @@ class Crawler {
     async run() {
         let found = false;
         while (found === false) {
-            await this.wait();
             found = await this.search();
+            await this.wait();
         }
         return found;
     }
